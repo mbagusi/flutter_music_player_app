@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:music_player/widgets/list_tile.dart';
 
@@ -48,21 +49,52 @@ class _MusicPlayerState extends State<MusicPlayer> {
       'coverUrl':
           "https://pbs.twimg.com/profile_images/1139280552677167104/qUhMRgLU_400x400.png"
     },
-
     {
       'title': "Relaxing in Nature",
       'singer': "Diego Nava",
-      'url': "https://assets.mixkit.co/music/preview/mixkit-relaxing-in-nature-522.mp3",
-      'coverUrl': "https://i1.sndcdn.com/avatars-000042074985-zo8rh6-t500x500.jpg"
+      'url':
+          "https://assets.mixkit.co/music/preview/mixkit-relaxing-in-nature-522.mp3",
+      'coverUrl':
+          "https://i1.sndcdn.com/avatars-000042074985-zo8rh6-t500x500.jpg"
     },
-
     {
       'title': "Hip Hop 02",
       'singer': "Lily J",
       'url': "https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3",
-      'coverUrl': "https://i1.sndcdn.com/avatars-000042293689-rcdbzo-t240x240.jpg"
+      'coverUrl':
+          "https://i1.sndcdn.com/avatars-000042293689-rcdbzo-t240x240.jpg"
     }
   ];
+
+  String currentCover = "";
+  String currentTitle = "";
+  String currentSinger = "";
+  IconData btnIcon = Icons.play_arrow;
+
+  AudioPlayer audioPlayer = new AudioPlayer(mode: PlayerMode.MEDIA_PLAYER);
+  bool isPlaying = false;
+
+  String currentSong = "";
+
+  void playMusic(String url) async {
+    if (isPlaying && currentSong != url) {
+      audioPlayer.pause();
+      int result = await audioPlayer.play(url);
+      if (result == 1) {
+        setState(() {
+          currentSong = url;
+        });
+      }
+    } else if (!isPlaying) {
+      int result = await audioPlayer.play(url);
+      if (result == 1) {
+        setState(() {
+          isPlaying = true;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,12 +113,95 @@ class _MusicPlayerState extends State<MusicPlayer> {
             child: ListView.builder(
                 itemCount: music.length,
                 itemBuilder: (context, index) => listTileCustom(
+                      onTap: () {
+                        playMusic(music[index]['url']);
+                        btnIcon = Icons.pause;
+                        setState(() {
+                          currentTitle = music[index]['title'];
+                          currentCover = music[index]['coverUrl'];
+                          currentSinger = music[index]['singer'];
+                        });
+                      },
                       title: music[index]['title'],
                       singer: music[index]['singer'],
                       cover: music[index]['coverUrl'],
                     )),
           ),
-          Container(),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x55212121),
+                  blurRadius: 8.0,
+                ),
+              ],
+            ),
+            child: Column(
+              children: <Widget>[
+                Slider.adaptive(value: 0.0, onChanged: (value) {}),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      bottom: 8.0, left: 12.0, right: 12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      Container(
+                        height: 60,
+                        width: 60,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16.0),
+                            image: DecorationImage(
+                                image: NetworkImage(currentCover))),
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              currentTitle,
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(
+                              height: 5.0,
+                            ),
+                            Text(
+                              currentSinger,
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          if (isPlaying) {
+                            audioPlayer.pause();
+                            setState(() {
+                              btnIcon = Icons.play_arrow;
+                              isPlaying = false;
+                            });
+                          } else {
+                            audioPlayer.resume();
+                            setState(() {
+                              btnIcon = Icons.pause;
+                              isPlaying = true;
+                            });
+                          }
+                        },
+                        icon: Icon(btnIcon),
+                        iconSize: 42,
+                      )
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ),
         ],
       ),
     );
