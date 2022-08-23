@@ -76,6 +76,9 @@ class _MusicPlayerState extends State<MusicPlayer> {
 
   String currentSong = "";
 
+  Duration duration = new Duration();
+  Duration position = new Duration();
+
   void playMusic(String url) async {
     if (isPlaying && currentSong != url) {
       audioPlayer.pause();
@@ -93,6 +96,17 @@ class _MusicPlayerState extends State<MusicPlayer> {
         });
       }
     }
+    audioPlayer.onDurationChanged.listen((event) {
+      setState(() {
+        duration = event;
+      });
+    });
+
+    audioPlayer.onAudioPositionChanged.listen((event) {
+      setState(() {
+        position = event;
+      });
+    });
   }
 
   @override
@@ -139,7 +153,12 @@ class _MusicPlayerState extends State<MusicPlayer> {
             ),
             child: Column(
               children: <Widget>[
-                Slider.adaptive(value: 0.0, onChanged: (value) {}),
+                Slider.adaptive(
+                  value: position.inSeconds.toDouble(),
+                  onChanged: (value) {},
+                  min: 0,
+                  max: duration.inSeconds.toDouble(),
+                ),
                 Padding(
                   padding: const EdgeInsets.only(
                       bottom: 8.0, left: 12.0, right: 12.0),
